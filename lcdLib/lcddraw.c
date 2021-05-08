@@ -37,6 +37,24 @@ void fillRectangle(u_char colMin, u_char rowMin, u_char width, u_char height,
   }
 }
 
+/** Draw Triangle
+ *  \param colMin Column start
+ *  \param rowMin Row start
+ *  \param height height of triangle
+ *  \param colorBGR Color of triangle in BGR
+ */
+void drawTriangle(u_char colMin, u_char rowMin, u_char height, u_int colorBGR) {
+  float mod = 3.0; // used to change slope of hypotenuse (2.0 is 45 degrees)
+  for (int row = 0; row < height; row++) {
+    // "int col = row", right angle triangle
+    // "int col = row*2", left side moves inward
+    for (int col = 0; col < row*mod; col++) {
+      //drawPixel((col+colMin) + 0, row+rowMin, COLOR_RED);
+      drawPixel((col+colMin) + (height-row), row+rowMin, colorBGR);
+    }
+  }
+}
+
 /** Clear screen (fill with color)
  *  
  *  \param colorBGR The color to fill screen
@@ -92,6 +110,62 @@ void drawString5x7(u_char col, u_char row, char *string,
     drawChar5x7(cols, row, *string++, fgColorBGR, bgColorBGR);
     cols += 6;
   }
+}
+
+/** 8x12 font - this function draws background pixels
+ *  Adapted from RobG's EduKit
+ */
+void drawChar8x12(u_char rcol, u_char rrow, char c, u_int fgColorBGR, u_int bgColorBGR)
+{
+  u_char col = 0;
+  u_int row = 0;
+  u_char bit = 0x80;
+  u_char oc = c - 0x20;
+
+  lcd_setArea(rcol, rrow, rcol + 7, rrow + 12); /* relative to requested col/row */
+  while (row < 12) {
+    while (col < 8) {
+      u_int colorBGR = (font_8x12[oc][row] & bit) ? fgColorBGR : bgColorBGR;
+      lcd_writeColor(colorBGR);
+      col++;
+      bit >>= 1;
+    }
+    col = 0;
+    bit = 0x80;
+    row++;
+  }
+}
+
+/** Draw string at col,row
+ *  Type:
+ *  FONT_SM - small (5x8,) FONT_MD - medium (8x12,) FONT_LG - large (11x16)
+ *  FONT_SM_BKG, FONT_MD_BKG, FONT_LG_BKG - as above, but with background color
+ *  Adapted from RobG's EduKit
+ *  \param col Column to start drawing string
+ *  \param row Row to start drawing string
+ *  \param string The string
+ *  \param fgColorBGR Foreground color in BGR
+ *  \param bgColorBGR Background color in BGR
+ */
+void drawString8x12(u_char col, u_char row, char *string, u_int fgColorBGR, u_int bgColorBGR)
+{
+  u_char cols = col;
+  while (*string) {
+    drawChar8x12(cols, row, *string++, fgColorBGR, bgColorBGR);
+    cols += 9;
+  }
+}
+
+/** Write a set message on the screen
+ * Using font8x12
+ * Write "DO NOT ERASE"
+ * For use in main and state machine
+ */
+void write_on_blackboard()
+{
+  // 14 8x12 chars fit across the screen
+  drawString8x12(40,screenHeight/2,    "DO NOT", COLOR_WHITE, COLOR_BLACK);
+  drawString8x12(44,screenHeight/2+15, "ERASE", COLOR_WHITE, COLOR_BLACK);
 }
 
 
